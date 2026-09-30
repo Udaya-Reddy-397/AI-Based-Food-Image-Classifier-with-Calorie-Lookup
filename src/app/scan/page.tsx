@@ -132,7 +132,7 @@ export default function ScanPage() {
         }
       });
     });
-    setAllergyWarnings([...new Set(warnings)]);
+    setAllergyWarnings(Array.from(new Set(warnings)));
   };
 
   const updateCount = (idx: number, delta: number) => {
