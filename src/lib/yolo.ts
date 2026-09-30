@@ -1,5 +1,3 @@
-import * as ort from 'onnxruntime-web';
-
 const CLASS_NAMES = [
   "Chicken Curry", // 0
   "Omelette", // 1
@@ -28,7 +26,8 @@ const MODEL_SIZE = 640;
 
 export async function detectFood(imageElement: HTMLImageElement): Promise<{ name: string; count: number }[]> {
   try {
-    // 1. Load model with WASM provider
+    // 1. Load model with WASM provider (dynamically import to prevent page crash on Vercel)
+    const ort = await import('onnxruntime-web');
     ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
     const session = await ort.InferenceSession.create('/best.onnx', { executionProviders: ['wasm'] });
 
