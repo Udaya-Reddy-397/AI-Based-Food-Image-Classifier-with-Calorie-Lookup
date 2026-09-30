@@ -1,0 +1,11 @@
+{
+  "name": "NutriScan",
+  "short_name": "NutriScan",
+  "description": "AI-powered food analysis and nutrition tracking",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#16a34a",
+  "icons": []
+}
+
