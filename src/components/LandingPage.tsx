@@ -51,18 +51,12 @@ export default function LandingPage({ onLogin }: { onLogin: () => void }) {
 
         {/* Hero Image Mockup (CSS) */}
         <div className="relative">
-          <div className="bg-white rounded-3xl p-6 shadow-xl shadow-orange-900/5 border border-white/50 backdrop-blur-sm relative z-10">
-            <div className="absolute -top-4 -left-4 bg-white text-sm font-bold text-gray-900 px-4 py-2 rounded-xl shadow-lg border border-gray-100 flex items-center gap-2 z-20">
-              ~520 kcal
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-[#fff9f0] h-24 rounded-2xl flex items-center justify-center text-4xl shadow-inner">🍓</div>
-              <div className="bg-[#f0fdf4] h-24 rounded-2xl flex items-center justify-center text-4xl shadow-inner">🥬</div>
-              <div className="bg-[#fffbeb] h-24 rounded-2xl flex items-center justify-center text-4xl shadow-inner">🥜</div>
-              <div className="bg-[#fefce8] h-24 rounded-2xl flex items-center justify-center text-4xl shadow-inner">🌾</div>
-              <div className="bg-[#fdf2f8] h-24 rounded-2xl flex items-center justify-center text-4xl shadow-inner">🍅</div>
-              <div className="bg-[#f0f9ff] h-24 rounded-2xl flex items-center justify-center text-4xl shadow-inner">🥑</div>
-            </div>
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-orange-900/10 border-4 border-white z-10 aspect-video md:aspect-auto">
+            <img 
+              src="/hero-image.jpg" 
+              alt="Scanning food with NutriScan" 
+              className="w-full h-full object-cover rounded-[1.25rem]"
+            />
           </div>
           {/* Decorative blur */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-orange-200/40 to-yellow-100/40 blur-3xl -z-10 rounded-full"></div>
