@@ -166,6 +166,45 @@ export default function ProfilePage() {
         </div>
       </section>
 
+      {/* BMI Calculator */}
+      {(() => {
+        const heightInMeters = profile.height / 100;
+        const bmi = (profile.weight / (heightInMeters * heightInMeters)).toFixed(1);
+        const bmiValue = parseFloat(bmi);
+        
+        let category = "";
+        let colorClass = "";
+        
+        if (bmiValue < 18.5) {
+          category = "Underweight";
+          colorClass = "bg-blue-100 text-blue-800 border-blue-300";
+        } else if (bmiValue >= 18.5 && bmiValue < 25) {
+          category = "Healthy Weight";
+          colorClass = "bg-green-100 text-green-800 border-green-300";
+        } else if (bmiValue >= 25 && bmiValue < 30) {
+          category = "Overweight";
+          colorClass = "bg-orange-100 text-orange-800 border-orange-300";
+        } else {
+          category = "Obesity";
+          colorClass = "bg-red-100 text-red-800 border-red-300";
+        }
+
+        return (
+          <section className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-800">Body Mass Index (BMI)</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Based on your height and weight</p>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-2xl font-black text-gray-900">{bmi}</span>
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-full border mt-1 ${colorClass}`}>
+                {category}
+              </span>
+            </div>
+          </section>
+        );
+      })()}
+
       {/* Goal */}
       <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
         <h2 className="font-semibold text-gray-800">Goal</h2>
