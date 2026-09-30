@@ -16,6 +16,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Handle redirect result (if signInWithRedirect was used)
+    import("@/lib/firebase").then(({ getRedirectResult, auth: fbAuth }) => {
+      getRedirectResult(fbAuth).catch(() => {});
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);

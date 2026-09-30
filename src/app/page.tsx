@@ -33,10 +33,20 @@ export default function DashboardPage() {
 
   const handleLogin = async () => {
     try {
-      const { signInWithPopup, auth, googleProvider } = await import("@/lib/firebase");
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+      const { signInWithPopup, signInWithRedirect, auth, googleProvider } = await import("@/lib/firebase");
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch (popupError: any) {
+        // If popup blocked or failed, fall back to redirect
+        if (popupError?.code === "auth/popup-blocked" || popupError?.code === "auth/popup-closed-by-user" || popupError?.code === "auth/cancelled-popup-request") {
+          await signInWithRedirect(auth, googleProvider);
+        } else {
+          throw popupError;
+        }
+      }
+    } catch (error: any) {
       console.error("Login failed:", error);
+      alert("Login failed: " + (error?.message || "Unknown error. Please try again."));
     }
   };
 
