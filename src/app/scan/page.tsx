@@ -14,7 +14,6 @@ import {
 import { calculateNutrition, getAveragePortion } from "@/lib/nutrition-db";
 import { addMeal, getProfile } from "@/lib/storage";
 import { FoodItem, MealType } from "@/lib/types";
-import { detectFood } from "@/lib/yolo";
 import { v4 as uuidv4 } from "uuid";
 
 export default function ScanPage() {
@@ -81,23 +80,19 @@ export default function ScanPage() {
     setStep("upload");
 
     try {
-      // 1. Create an HTMLImageElement to feed to the YOLO model
-      const img = new Image();
-      img.src = objectUrl;
-      await new Promise((resolve) => { img.onload = resolve; });
+      // Send image to the API route for analysis
+      const formData = new FormData();
+      formData.append("image", file);
 
-      // 2. Run the client-side YOLO inference! (0 server cost)
-      const detectedItems = await detectFood(img);
-      
-      // 3. Map detected items to the nutrition database
-      const processedFoods = detectedItems.map((d) => {
-        const grams = getAveragePortion(d.name) * d.count;
-        const nut = calculateNutrition(d.name, grams);
-        return {
-          ...nut,
-          count: d.count,
-        };
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        body: formData,
       });
+
+      if (!res.ok) throw new Error("Analysis failed");
+
+      const data = await res.json();
+      const processedFoods: FoodItem[] = data.foods;
 
       setFoods(processedFoods);
       checkAllergies(processedFoods);
