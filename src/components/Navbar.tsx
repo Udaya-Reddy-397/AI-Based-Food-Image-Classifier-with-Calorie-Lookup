@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Camera, History, User } from "lucide-react";
+import { Home, Camera, History, User, MessageCircle } from "lucide-react";
 import clsx from "clsx";
 
 import { useAuth } from "@/components/AuthProvider";
@@ -11,6 +11,7 @@ const links = [
   { href: "/", label: "Home", icon: Home },
   { href: "/scan", label: "Scan", icon: Camera },
   { href: "/history", label: "History", icon: History },
+  { href: "/chat", label: "Chat", icon: MessageCircle },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
