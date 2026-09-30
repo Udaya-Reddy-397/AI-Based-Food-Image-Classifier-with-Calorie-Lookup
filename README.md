@@ -1,92 +1,81 @@
-# NutriVision AI
+# NutriScan-ai 🍏
 
-AI-Based Food Quantity, Nutrition & Personalized Meal Tracking System
+> An AI-powered web application that helps users scan and analyze their food for nutritional insights. 
+> Built with Next.js and Firebase to seamlessly track dietary habits and personal health history.
 
-## Features
+![Deployment](https://img.shields.io/badge/Deployed_on-Vercel-black?logo=vercel)
+![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
+![Firebase](https://img.shields.io/badge/Firebase-Auth-yellow?logo=firebase)
 
-- 📷 Take photo or upload food image
-- 🤖 AI food detection + item counting (mock AI included – ready for real YOLO)
-- ⚖️ Quantity / portion estimation with user correction
-- 🧮 Nutrition calculation for actual estimated grams
-- 👤 User profile (goal, diet type, allergies, preferences)
-- 📊 Daily dashboard with progress bars
-- 💡 Rule-based personalized insights
-- 🚨 Allergy warnings based on ingredient database
-- 📅 Weekly history + charts
-- ☁️ Ready to deploy on **Vercel**
+NutriScan-ai allows you to snap a photo of your meal and get an instant breakdown of calories, protein, carbs, and fats. It also provides personalized dietary targets, allergy warnings, and a dashboard to track your nutrition history.
 
-## Quick Start
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Run development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000)
-
-## Deploy on Vercel
-
-1. Push this folder to a GitHub repository
-2. Go to [vercel.com](https://vercel.com) → New Project → Import the repo
-3. Framework Preset: **Next.js** (auto-detected)
-4. Click **Deploy**
-
-That’s it. Camera access works on the HTTPS domain provided by Vercel.
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── page.tsx              → Dashboard
-│   ├── scan/page.tsx         → Camera + Upload + Results
-│   ├── history/page.tsx      → Weekly chart + meal history
-│   ├── profile/page.tsx      → Profile, goals, allergies
-│   └── api/analyze/route.ts  → Food analysis API (mock AI)
-├── components/
-│   ├── Navbar.tsx
-│   ├── NutritionBar.tsx
-│   └── InsightCard.tsx
-└── lib/
-    ├── types.ts
-    ├── nutrition-db.ts       → Per-100g nutrition data
-    └── storage.ts            → localStorage helpers + BMR logic
-```
-
-## Replacing Mock AI with Real YOLO Model
-
-Current detection is mocked in `src/app/api/analyze/route.ts`.
-
-To use a real model:
-
-1. Train YOLOv8 on Indian food images (Roboflow + Ultralytics)
-2. Export to ONNX
-3. Either:
-   - Run inference client-side with `onnxruntime-web`, or
-   - Host model on Hugging Face / Replicate and call the API from the route
-
-The rest of the app (quantity correction, nutrition calc, dashboard, allergies) already works with whatever list of `{ name, count }` the API returns.
-
-## Notes for Exhibition / Viva
-
-- Nutrition values are **estimates**
-- Allergy alerts are based on the **database**, not the photo itself
-- Quantity is estimated + **user-correctable**
-- Daily targets use standard Mifflin-St Jeor formula + goal adjustment
-- The system does **not** claim to measure blood glucose or diagnose conditions
-
-## Tech Stack
-
-- Next.js 14 (App Router)
-- TypeScript
-- Tailwind CSS
-- Recharts
-- Lucide Icons
-- localStorage (no external DB needed for MVP)
+## 🚀 Live Demo
+**[View Live Application on Vercel](https://ai-based-food-image-classifier-with-calorie-lookup-7lg8o243i.vercel.app/)**
 
 ---
 
-Built for college project demonstration – ready for Vercel deployment.
+## ✨ Features
+
+- 📸 **AI Food Detection**: Identifies food items directly from your camera or uploaded images.
+- 📊 **Nutrition Tracking**: Calculates exact nutrition data based on detected portion sizes.
+- 👤 **Personalized Profiles**: Set your goals (weight loss/gain), track allergies, and view daily macro targets.
+- ⚠️ **Allergy Warnings**: Automatically flags scanned foods that might contain your listed allergens.
+- 📈 **History & Dashboard**: Visualize your weekly progress using charts and a complete meal history.
+- 🔐 **Secure Authentication**: Uses Firebase Google Sign-In so your data is linked directly to your account.
+- 📱 **Mobile Ready**: Fully responsive and optimized for scanning on your smartphone (PWA ready).
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Authentication**: [Firebase Auth](https://firebase.google.com/docs/auth)
+- **Database/Storage**: Firebase Firestore + Local Storage
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Charts**: [Recharts](https://recharts.org/)
+- **AI Integration**: Custom ONNX Model Inference using `onnxruntime-web`
+
+---
+
+## 💻 Getting Started (Local Development)
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/Udaya-Reddy-397/AI-Based-Food-Image-Classifier-with-Calorie-Lookup.git
+cd AI-Based-Food-Image-Classifier-with-Calorie-Lookup
+```
+
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Run the development server
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
+
+---
+
+## ☁️ Deployment
+
+This project is configured and optimized for deployment on **Vercel**. 
+
+*Note: For Firebase Authentication to work in production, ensure your Vercel deployment URL (e.g., `yourapp.vercel.app`) is added to the **Authorized Domains** list in your Firebase Console Authentication settings.*
+
+---
+
+## 📁 Project Structure
+
+- `src/app/` - Next.js App Router pages (Dashboard, Scan, Profile, History)
+- `src/components/` - Reusable UI components (Navbar, LandingPage, InsightCard, etc.)
+- `src/lib/` - Core logic, Firebase config, YOLO detection scripts, and types
+- `public/` - Static assets, PWA manifest, and ONNX models
+
+---
+
+Built for health, powered by AI.
