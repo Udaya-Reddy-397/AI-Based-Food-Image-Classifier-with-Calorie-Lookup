@@ -10,13 +10,14 @@
 NutriScan-ai allows you to snap a photo of your meal and get an instant breakdown of calories, protein, carbs, and fats. It also provides personalized dietary targets, allergy warnings, and a dashboard to track your nutrition history.
 
 ## 🚀 Live Demo
-**[View Live Application on Vercel](https://ai-based-food-image-classifier-with-calorie-lookup-7lg8o243i.vercel.app/)**
+**[View Live Application on Vercel](https://ai-based-food-image-classifier-with.vercel.app/)**
 
 ---
 
 ## ✨ Features
 
 - 📸 **AI Food Detection**: Identifies food items directly from your camera or uploaded images.
+- 🤖 **Personal AI Chatbot**: Ask nutrition questions and get personalized advice based on your profile and goals.
 - 📊 **Nutrition Tracking**: Calculates exact nutrition data based on detected portion sizes.
 - 👤 **Personalized Profiles**: Set your goals (weight loss/gain), track allergies, and view daily macro targets.
 - ⚠️ **Allergy Warnings**: Automatically flags scanned foods that might contain your listed allergens.
