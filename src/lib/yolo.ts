@@ -26,8 +26,10 @@ const MODEL_SIZE = 640;
 
 export async function detectFood(imageElement: HTMLImageElement): Promise<{ name: string; count: number }[]> {
   try {
-    // 1. Load model with WASM provider (dynamically import to prevent page crash on Vercel)
-    const ort = await import('onnxruntime-web');
+    // 1. Load model with WASM provider using global script to prevent Vercel webpack crashes
+    const ort = (window as any).ort;
+    if (!ort) throw new Error("ONNX runtime script failed to load on the page");
+    
     ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
     const session = await ort.InferenceSession.create('/best.onnx', { executionProviders: ['wasm'] });
 

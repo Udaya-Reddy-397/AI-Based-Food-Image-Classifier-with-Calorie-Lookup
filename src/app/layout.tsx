@@ -17,6 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+      </head>
       <body className="min-h-screen bg-slate-50 pb-20">
         <AuthProvider>
           <main className="min-h-screen">{children}</main>
