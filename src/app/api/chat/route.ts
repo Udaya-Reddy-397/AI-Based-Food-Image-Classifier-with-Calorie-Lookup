@@ -29,42 +29,28 @@ export async function POST(req: Request) {
       ]
     });
 
-    // Try gemini-2.0-flash first (most widely available), then gemini-1.5-flash
-    const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
+    const model = "gemini-1.5-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    for (const model of models) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
 
-      const res = await fetch(url, {
-        method: "POST",
+    if (res.ok) {
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not generate a response.";
+      return new Response(JSON.stringify({ reply: text }), {
+        status: 200,
         headers: { "Content-Type": "application/json" },
-        body,
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not generate a response.";
-        return new Response(JSON.stringify({ reply: text }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      // If 404 (model not found), try next model
-      if (res.status === 404) continue;
-
-      // For other errors (invalid key, quota, etc), return the actual error
-      const errText = await res.text();
-      return new Response(
-        JSON.stringify({ error: `Gemini API error (${res.status}): ${errText.substring(0, 200)}` }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
     }
 
-    // All models returned 404
-    const keyPreview = apiKey.substring(0, 8) + "...";
+    // Return the EXACT error from Google so we can read it
+    const errText = await res.text();
     return new Response(
-      JSON.stringify({ error: `No working Gemini model found. Your API key starts with: ${keyPreview}. Please verify it is a valid Gemini API key from https://aistudio.google.com/apikey` }),
+      JSON.stringify({ error: `Google API Error (${res.status}): ${errText.substring(0, 300)}` }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   } catch (error: any) {
