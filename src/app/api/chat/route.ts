@@ -29,28 +29,42 @@ export async function POST(req: Request) {
       ]
     });
 
-    const model = "gemini-1.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const modelsToTry = [
+      "gemini-2.0-flash",
+      "gemini-1.5-pro",
+      "gemini-pro",
+      "gemini-1.0-pro",
+      "gemini-1.5-flash-8b",
+      "gemini-1.5-flash-latest"
+    ];
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
+    let lastError = "";
 
-    if (res.ok) {
-      const data = await res.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not generate a response.";
-      return new Response(JSON.stringify({ reply: text }), {
-        status: 200,
+    for (const model of modelsToTry) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      const res = await fetch(url, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
+        body,
       });
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not generate a response.";
+        return new Response(JSON.stringify({ reply: text }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      // Record error and try next model
+      lastError = await res.text();
     }
 
-    // Return the EXACT error from Google so we can read it
-    const errText = await res.text();
+    // If we exhausted all models, return the last error
     return new Response(
-      JSON.stringify({ error: `Google API Error (${res.status}): ${errText.substring(0, 300)}` }),
+      JSON.stringify({ error: `Tried 6 different models and all failed. Last Google API Error: ${lastError.substring(0, 300)}` }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   } catch (error: any) {
