@@ -62,9 +62,25 @@ export async function POST(req: Request) {
       lastError = await res.text();
     }
 
-    // If we exhausted all models, return the last error
+    // If all models failed, let's ask Google exactly what models this key IS allowed to use!
+    let availableModelsStr = "Could not fetch model list.";
+    try {
+      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        const models = (listData.models || [])
+          .filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"))
+          .map((m: any) => m.name.replace("models/", ""));
+        availableModelsStr = models.join(", ") || "NO MODELS FOUND FOR THIS KEY!";
+      } else {
+        availableModelsStr = `Failed to fetch list: ${listRes.status}`;
+      }
+    } catch (e: any) {
+      availableModelsStr = `Error fetching list: ${e.message}`;
+    }
+
     return new Response(
-      JSON.stringify({ error: `Tried 6 different models and all failed. Last Google API Error: ${lastError.substring(0, 300)}` }),
+      JSON.stringify({ error: `All models 404'd! However, Google says your API key IS allowed to use these exact models: [${availableModelsStr}].` }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   } catch (error: any) {
