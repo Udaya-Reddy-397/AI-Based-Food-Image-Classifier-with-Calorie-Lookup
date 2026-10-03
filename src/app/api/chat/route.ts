@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Chat API error:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to communicate with AI. Please try again." }),
+      JSON.stringify({ error: error?.message || "Failed to communicate with AI. Please try again." }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

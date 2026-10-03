@@ -316,6 +316,21 @@ export default function ProfilePage() {
         </button>
 
         <button
+          onClick={async () => {
+            try {
+              const { signOut, auth } = await import("@/lib/firebase");
+              await signOut(auth);
+              router.push("/");
+            } catch (error) {
+              console.error("Logout failed:", error);
+            }
+          }}
+          className="w-full flex items-center justify-center gap-2 text-gray-700 bg-gray-100 py-3.5 rounded-xl font-bold hover:bg-gray-200 transition"
+        >
+          Sign Out
+        </button>
+
+        <button
           onClick={handleClear}
           className="w-full flex items-center justify-center gap-2 text-red-600 py-2.5 text-sm"
         >
