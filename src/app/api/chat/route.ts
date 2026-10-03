@@ -13,8 +13,8 @@ export async function POST(req: Request) {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim());
     
-    // Using 2.5-flash as it is extremely fast and stable
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // Using 3.8-flash per Google's explicit instruction
+    const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
 
     const systemPrompt = `You are a personalized AI nutrition assistant for a user named ${profile.name}.
     Here is their profile:
