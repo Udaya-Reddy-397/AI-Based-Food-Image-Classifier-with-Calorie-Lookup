@@ -1,3 +1,5 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 export async function POST(req: Request) {
   try {
     const { message, profile } = await req.json();
@@ -9,7 +11,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const apiKey = process.env.GEMINI_API_KEY.trim();
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim());
+    
+    // Using 2.5-flash as it is extremely fast and stable
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const systemPrompt = `You are a personalized AI nutrition assistant for a user named ${profile.name}.
     Here is their profile:
@@ -23,35 +28,14 @@ export async function POST(req: Request) {
     
     Please answer their questions specifically tailored to this profile. If they ask if they can eat something, consider their allergies and diet type. Keep your answers concise, friendly, and practical (around 2-3 short paragraphs max). Do not use markdown headers, just plain text with line breaks.`;
 
-    const body = JSON.stringify({
-      contents: [
-        { role: "user", parts: [{ text: systemPrompt + "\n\nUser question: " + message }] }
-      ]
-    });
+    const result = await model.generateContent([systemPrompt, message]);
+    const response = await result.response;
+    const text = response.text();
 
-    const model = "gemini-3.8-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-    const res = await fetch(url, {
-      method: "POST",
+    return new Response(JSON.stringify({ reply: text }), {
+      status: 200,
       headers: { "Content-Type": "application/json" },
-      body,
     });
-
-    if (res.ok) {
-      const data = await res.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not generate a response.";
-      return new Response(JSON.stringify({ reply: text }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const errText = await res.text();
-    return new Response(
-      JSON.stringify({ error: `Google API Error (${res.status}): ${errText.substring(0, 300)}` }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
   } catch (error: any) {
     console.error("Chat API error:", error);
     return new Response(
