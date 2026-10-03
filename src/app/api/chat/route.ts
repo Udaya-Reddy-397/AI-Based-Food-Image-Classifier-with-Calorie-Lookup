@@ -29,58 +29,27 @@ export async function POST(req: Request) {
       ]
     });
 
-    const modelsToTry = [
-      "gemini-2.0-flash",
-      "gemini-1.5-pro",
-      "gemini-pro",
-      "gemini-1.0-pro",
-      "gemini-1.5-flash-8b",
-      "gemini-1.5-flash-latest"
-    ];
+    const model = "gemini-3.8-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    let lastError = "";
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
 
-    for (const model of modelsToTry) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-      const res = await fetch(url, {
-        method: "POST",
+    if (res.ok) {
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not generate a response.";
+      return new Response(JSON.stringify({ reply: text }), {
+        status: 200,
         headers: { "Content-Type": "application/json" },
-        body,
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not generate a response.";
-        return new Response(JSON.stringify({ reply: text }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      // Record error and try next model
-      lastError = await res.text();
     }
 
-    // If all models failed, let's ask Google exactly what models this key IS allowed to use!
-    let availableModelsStr = "Could not fetch model list.";
-    try {
-      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-      if (listRes.ok) {
-        const listData = await listRes.json();
-        const models = (listData.models || [])
-          .filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"))
-          .map((m: any) => m.name.replace("models/", ""));
-        availableModelsStr = models.join(", ") || "NO MODELS FOUND FOR THIS KEY!";
-      } else {
-        availableModelsStr = `Failed to fetch list: ${listRes.status}`;
-      }
-    } catch (e: any) {
-      availableModelsStr = `Error fetching list: ${e.message}`;
-    }
-
+    const errText = await res.text();
     return new Response(
-      JSON.stringify({ error: `All models 404'd! However, Google says your API key IS allowed to use these exact models: [${availableModelsStr}].` }),
+      JSON.stringify({ error: `Google API Error (${res.status}): ${errText.substring(0, 300)}` }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   } catch (error: any) {
