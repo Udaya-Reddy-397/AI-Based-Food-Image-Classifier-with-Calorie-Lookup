@@ -4,7 +4,7 @@ export async function POST(req: Request) {
 
     if (!process.env.GEMINI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "Gemini API key is not configured. Please add GEMINI_API_KEY to your environment variables." }),
+        JSON.stringify({ error: "Gemini API key is not configured." }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -29,81 +29,48 @@ export async function POST(req: Request) {
       ]
     });
 
-    // Step 1: Auto-discover available models from the API key
-    let availableModels: string[] = [];
-    try {
-      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-      if (listRes.ok) {
-        const listData = await listRes.json();
-        availableModels = (listData.models || [])
-          .filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"))
-          .map((m: any) => m.name?.replace("models/", "") || "");
+    // Try gemini-2.0-flash first (most widely available), then gemini-1.5-flash
+    const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
+
+    for (const model of models) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not generate a response.";
+        return new Response(JSON.stringify({ reply: text }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
       }
-    } catch (e) {
-      console.log("Failed to list models:", e);
+
+      // If 404 (model not found), try next model
+      if (res.status === 404) continue;
+
+      // For other errors (invalid key, quota, etc), return the actual error
+      const errText = await res.text();
+      return new Response(
+        JSON.stringify({ error: `Gemini API error (${res.status}): ${errText.substring(0, 200)}` }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
     }
 
-    // Step 2: Build a prioritized list of models to try
-    const preferredOrder = [
-      "gemini-2.0-flash",
-      "gemini-2.0-flash-lite",
-      "gemini-1.5-flash-latest",
-      "gemini-1.5-flash",
-      "gemini-1.5-flash-8b",
-      "gemini-pro",
-      "gemini-1.0-pro",
-      "gemini-1.0-pro-latest",
-    ];
-
-    // Use discovered models first, fallback to our preferred list
-    const modelsToTry = availableModels.length > 0
-      ? Array.from(new Set([...availableModels.filter(m => preferredOrder.some(p => m.includes(p))), ...availableModels, ...preferredOrder]))
-      : preferredOrder;
-
-    let lastError = "";
-    const errors: string[] = [];
-
-    for (const model of modelsToTry.slice(0, 8)) {
-      for (const version of ["v1beta", "v1"]) {
-        const url = `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${apiKey}`;
-
-        try {
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body,
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not generate a response.";
-            return new Response(JSON.stringify({ reply: text }), {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-
-          const errorData = await res.text();
-          lastError = `${version}/${model}: ${errorData.substring(0, 100)}`;
-          errors.push(lastError);
-        } catch (fetchErr: any) {
-          lastError = `${version}/${model}: ${fetchErr.message}`;
-          errors.push(lastError);
-        }
-      }
-    }
-
-    const keyPrefix = apiKey.substring(0, 6) + "...";
+    // All models returned 404
+    const keyPreview = apiKey.substring(0, 8) + "...";
     return new Response(
-      JSON.stringify({
-        error: `Could not connect to any Gemini model. API key starts with: ${keyPrefix}. Available models found: ${availableModels.length > 0 ? availableModels.join(", ") : "NONE (key may be invalid)"}. Tried: ${errors.slice(0, 3).join(" | ")}`
-      }),
+      JSON.stringify({ error: `No working Gemini model found. Your API key starts with: ${keyPreview}. Please verify it is a valid Gemini API key from https://aistudio.google.com/apikey` }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   } catch (error: any) {
     console.error("Chat API error:", error);
     return new Response(
-      JSON.stringify({ error: error?.message || "Failed to communicate with AI. Please try again." }),
+      JSON.stringify({ error: error?.message || "Failed to communicate with AI." }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
