@@ -80,19 +80,30 @@ export default function ScanPage() {
     setStep("upload");
 
     try {
-      // Send image to the API route for analysis
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        body: formData,
+      // Use client-side YOLO for inference
+      const { detectFood } = await import("@/lib/yolo");
+      
+      const img = new Image();
+      img.src = objectUrl;
+      await new Promise((resolve) => {
+        img.onload = resolve;
       });
 
-      if (!res.ok) throw new Error("Analysis failed");
+      const detections = await detectFood(img);
 
-      const data = await res.json();
-      const processedFoods: FoodItem[] = data.foods;
+      // If YOLO didn't detect anything, fallback to a default item so it doesn't break
+      if (detections.length === 0) {
+        detections.push({ name: "Unknown Food", count: 1 });
+      }
+
+      const processedFoods: FoodItem[] = detections.map((d) => {
+        const grams = getAveragePortion(d.name) * (d.count || 1);
+        const nut = calculateNutrition(d.name, grams);
+        return {
+          ...nut,
+          count: d.count || 1,
+        };
+      });
 
       setFoods(processedFoods);
       checkAllergies(processedFoods);
