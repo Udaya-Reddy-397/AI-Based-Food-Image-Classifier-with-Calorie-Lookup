@@ -1,57 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { calculateNutrition, getAveragePortion } from "@/lib/nutrition-db";
-
-/**
- * MOCK AI DETECTION
- * -----------------
- * This simulates what a real YOLO model would return.
- * Later you can replace the body of this function with:
- * 1. Real YOLO / ONNX inference
- * 2. Hugging Face Inference API call
- * 3. Replicate / custom backend
- */
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 type Detection = { name: string; count: number };
-
-function mockDetect(): Detection[] {
-  const scenarios: Detection[][] = [
-    [{ name: "Samosa", count: 3 }],
-    [
-      { name: "Idli", count: 2 },
-      { name: "Sambar", count: 1 },
-    ],
-    [
-      { name: "Rice", count: 1 },
-      { name: "Dal", count: 1 },
-      { name: "Roti", count: 2 },
-    ],
-    [
-      { name: "Dosa", count: 1 },
-      { name: "Sambar", count: 1 },
-    ],
-    [
-      { name: "Biryani", count: 1 },
-      { name: "Curd", count: 1 },
-    ],
-    [
-      { name: "Paneer", count: 1 },
-      { name: "Roti", count: 2 },
-      { name: "Salad", count: 1 },
-    ],
-    [{ name: "Poha", count: 1 }],
-    [
-      { name: "Egg", count: 2 },
-      { name: "Bread", count: 2 },
-    ],
-    [
-      { name: "Chicken", count: 1 },
-      { name: "Rice", count: 1 },
-    ],
-    [{ name: "Banana", count: 1 }],
-  ];
-
-  return scenarios[Math.floor(Math.random() * scenarios.length)];
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,31 +13,65 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
     }
 
-    // Simulate processing delay
-    await new Promise((r) => setTimeout(r, 1200));
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: "Gemini API key not configured. Please add GEMINI_API_KEY in Vercel." }, { status: 500 });
+    }
 
-    // ---- REPLACE THIS BLOCK WITH REAL MODEL ----
-    const detections = mockDetect();
-    // --------------------------------------------
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // Convert the uploaded file to a base64 string for Gemini
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64String = buffer.toString("base64");
+
+    const imageParts = [
+      {
+        inlineData: {
+          data: base64String,
+          mimeType: file.type || "image/jpeg",
+        },
+      },
+    ];
+
+    const prompt = `Analyze this image of food. 
+Identify the main food items present on the plate.
+Return ONLY a valid JSON array of objects. 
+Each object must have exactly two keys: "name" (string, the name of the food, e.g. "Chicken Curry") and "count" (number, estimated quantity, usually 1).
+Example: [{"name": "Chicken Curry", "count": 1}, {"name": "Rice", "count": 1}]
+Do not include any markdown formatting or backticks, just the raw JSON array starting with [ and ending with ].`;
+
+    const result = await model.generateContent([prompt, ...imageParts]);
+    const response = await result.response;
+    const text = response.text().trim().replace(/```json/gi, "").replace(/```/gi, "").trim();
+    
+    let detections: Detection[] = [];
+    try {
+      detections = JSON.parse(text);
+      if (!Array.isArray(detections)) detections = [{ name: "Food", count: 1 }];
+    } catch (e) {
+      console.error("Failed to parse Gemini response:", text);
+      detections = [{ name: "Unknown Food", count: 1 }];
+    }
 
     const foods = detections.map((d) => {
-      const grams = getAveragePortion(d.name) * d.count;
+      const grams = getAveragePortion(d.name) * (d.count || 1);
       const nut = calculateNutrition(d.name, grams);
       return {
         ...nut,
-        count: d.count,
+        count: d.count || 1,
       };
     });
 
     return NextResponse.json({
       success: true,
       foods,
-      message: "Analysis complete (mock AI – replace with real YOLO model)",
+      message: "Analysis complete",
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Analyze error:", err);
     return NextResponse.json(
-      { error: "Food analysis failed" },
+      { error: err?.message || "Food analysis failed" },
       { status: 500 }
     );
   }
