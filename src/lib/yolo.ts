@@ -74,7 +74,7 @@ export async function detectFood(imageElement: HTMLImageElement): Promise<{ name
         }
       }
 
-      if (maxProb > 0.4) { // Confidence threshold (adjustable)
+      if (maxProb > 0.15) { // Confidence threshold (lowered for debugging)
         const xc = output[0 * numBoxes + i];
         const yc = output[1 * numBoxes + i];
         const w = output[2 * numBoxes + i];
@@ -123,8 +123,9 @@ export async function detectFood(imageElement: HTMLImageElement): Promise<{ name
       count
     }));
 
-  } catch (err) {
+  } catch (err: any) {
     console.error("YOLO Inference error:", err);
+    alert("YOLO Error: " + (err?.message || "Check console"));
     return [];
   }
 }
