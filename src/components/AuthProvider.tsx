@@ -24,6 +24,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
+      // Set current user for storage so each account gets separate data
+      import("@/lib/storage").then(({ setCurrentUser }) => {
+        setCurrentUser(user?.uid || "");
+      });
     });
     return () => unsubscribe();
   }, []);

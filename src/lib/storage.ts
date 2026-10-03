@@ -2,13 +2,25 @@
 
 import { UserProfile, MealEntry, DailyTargets } from "./types";
 
-const PROFILE_KEY = "nv_profile";
-const MEALS_KEY = "nv_meals";
+// Current user ID - set when user logs in so each account gets its own data
+let currentUserId: string = "";
+
+export function setCurrentUser(uid: string) {
+  currentUserId = uid;
+}
+
+function profileKey(): string {
+  return currentUserId ? `nv_profile_${currentUserId}` : "nv_profile";
+}
+
+function mealsKey(): string {
+  return currentUserId ? `nv_meals_${currentUserId}` : "nv_meals";
+}
 
 export function getProfile(): UserProfile | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(PROFILE_KEY);
+    const raw = localStorage.getItem(profileKey());
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -17,13 +29,13 @@ export function getProfile(): UserProfile | null {
 
 export function saveProfile(profile: UserProfile) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  localStorage.setItem(profileKey(), JSON.stringify(profile));
 }
 
 export function getMeals(): MealEntry[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(MEALS_KEY);
+    const raw = localStorage.getItem(mealsKey());
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -36,7 +48,7 @@ export function addMeal(meal: MealEntry) {
   meals.unshift(meal);
   // Keep last 100 meals
   const trimmed = meals.slice(0, 100);
-  localStorage.setItem(MEALS_KEY, JSON.stringify(trimmed));
+  localStorage.setItem(mealsKey(), JSON.stringify(trimmed));
 }
 
 export function getTodayMeals(): MealEntry[] {
@@ -54,8 +66,8 @@ export function getWeekMeals(): MealEntry[] {
 
 export function clearAllData() {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(PROFILE_KEY);
-  localStorage.removeItem(MEALS_KEY);
+  localStorage.removeItem(profileKey());
+  localStorage.removeItem(mealsKey());
 }
 
 /** Simple BMR + TDEE calculation */
