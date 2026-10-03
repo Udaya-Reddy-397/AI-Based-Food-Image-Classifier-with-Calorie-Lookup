@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
     // Use discovered models first, fallback to our preferred list
     const modelsToTry = availableModels.length > 0
-      ? [...new Set([...availableModels.filter(m => preferredOrder.some(p => m.includes(p))), ...availableModels, ...preferredOrder])]
+      ? Array.from(new Set([...availableModels.filter(m => preferredOrder.some(p => m.includes(p))), ...availableModels, ...preferredOrder]))
       : preferredOrder;
 
     let lastError = "";
