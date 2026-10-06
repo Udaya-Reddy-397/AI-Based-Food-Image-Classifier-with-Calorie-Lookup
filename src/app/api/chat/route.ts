@@ -27,13 +27,18 @@ export async function POST(req: Request) {
 
     // 503 errors mean the Google server is overloaded. We will fallback through multiple less-congested models.
     const modelsToTry = [
-      "gemini-2.5-pro",          // Pro models are often on less congested servers
-      "gemini-3.5-flash",        // Older flash version, might be less congested
-      "gemini-omni-1.1-flash",   // Alternative model from user's allowed list
-      "gemini-flash-latest"      // Fallback
+      "gemma-4-31b-it",          // Gemma is likely on different infrastructure
+      "gemini-3.1-pro-preview",  // Obscure preview model
+      "gemini-3.7-flash",        // Less common version
+      "gemini-2.5-flash-lite",   // Lite version might have lower load
+      "gemini-2.5-pro",          
+      "gemini-3.5-flash",        
+      "gemini-flash-latest"      
     ];
 
     let lastErrorMsg = "";
+
+    const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
     for (const modelName of modelsToTry) {
       try {
@@ -48,7 +53,8 @@ export async function POST(req: Request) {
       } catch (e: any) {
         lastErrorMsg = e.message;
         console.log(`Model ${modelName} failed:`, e.message);
-        // If it's a 503, immediately try the next model in the list
+        // Wait half a second before trying the next model to avoid rapid-fire rate limits
+        await delay(500);
       }
     }
 
